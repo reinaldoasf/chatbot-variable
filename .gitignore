@@ -209,3 +209,4 @@ __marimo__/
 # Project specific folders
 data/
 .vscode
+chroma_langchain_db/*
