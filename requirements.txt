@@ -1,4 +1,9 @@
 langchain
 langchain-ollama
 langchain-chroma
+langchain-community
 pandas
+pypdf
+sentence-transformers
+faiss-cpu
+ollama
