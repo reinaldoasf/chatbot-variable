@@ -9,11 +9,12 @@ from llama_index.core import (
     load_index_from_storage,
     Settings
 )
+from llama_index.core.node_parser import SentenceSplitter
 from llama_index.readers.web import BeautifulSoupWebReader
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
-load_dotenv()
+#logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+#logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
+#load_dotenv()
 
 USE_OLLAMA = True
 
@@ -32,6 +33,7 @@ def configure_models(model="llama3.2", embeddings_model="mxbai-embed-large") -> 
         from llama_index.embeddings.ollama import OllamaEmbedding
         Settings.llm = Ollama(model=model, request_timeout=240)
         Settings.embed_model = OllamaEmbedding(model_name=embeddings_model)
+        Settings.embed_batch_size=32
     else:
         #TODO create a configuration to other paid APIs.
         pass
@@ -47,6 +49,7 @@ def load_documents():
 
     urls_to_load = [
         "https://pt.wikipedia.org/wiki/Intelig%C3%AAncia_artificial"
+        "https://www.york.ac.uk/teaching/cws/wws/webpage1.html"
     ]#TODO replace for the json file reader.
 
     if urls_to_load:
@@ -54,14 +57,18 @@ def load_documents():
         loader_web = BeautifulSoupWebReader()
         web_docs = loader_web.load_data(urls=urls_to_load)
         print("Web documents are read")
-    
-    return local_documents + web_docs
+        local_documents += web_docs
+    return local_documents
 
 
 
 def main(): #TODO add possibility of add arg to choose witch environment to build the storage.
     configure_models()
-    
+    node_parser = SentenceSplitter(
+        chunk_size=512,
+        chunk_overlap = 50
+    )
+    Settings.node_parser = node_parser
     if not os.path.exists(DATA_DIR):
         raise("Create and place data on ", DATA_DIR)
     
@@ -78,12 +85,9 @@ def main(): #TODO add possibility of add arg to choose witch environment to buil
         print("Index found. Updating with new content")
         storage_context = StorageContext.from_defaults(persist_dir=PERSIST_DATA_DIR)
         index = load_index_from_storage(storage_context)
-        refresh_info = index.refresh_ref_docs(documents, show_progress=True)
-        print(f"Added: {sum(refresh_info.inserted_doc_ids)}")
-        print(f"Added: {sum(refresh_info.updated_doc_ids)}")
-        print(f"Added: {sum(refresh_info.updated_doc_ids)}")
+        refresh_info = index.refresh_ref_docs(documents, show_progress=False)
 
-        if any(refresh_info.values()):
+        if any(refresh_info):
             index.storage_context.persist(PERSIST_DATA_DIR)
             print("index updated")
         else:
