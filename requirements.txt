@@ -1,0 +1,13 @@
+langchain
+langchain-ollama
+langchain-chroma
+langchain-community
+pandas
+pypdf
+sentence-transformers
+faiss-cpu
+ollama
+beautifulsoup4
+llama-index-llms-ollama
+llama-index-embeddings-ollama
+

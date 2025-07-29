@@ -1,0 +1,2 @@
+llama3.2 (chat model)
+mxbai-embed-large (embeddings model)
